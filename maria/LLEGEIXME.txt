@@ -1,0 +1,11 @@
+No és tant complicat com sembla, però cal tenir aixó en compte:
+
+- Cada deploy ha de tenir un servei. les etiquetes han de quadrar (label, selector...). 
+- Cada deploy té una imatge base (image) i un port associat per accedir-hi, que ha de coincidir amb el del servei en qüestió. Els ports surten varis cops, ja que podem canviar-los.
+- El service pot ser intern (per defecte) o extern (Loadbalancer). Si és extern cal exposar un Nodeport > 30000. Aquest port és únic pel servei, no es pot repetir, i és on exposem el contenidor.
+- Al ConfigMap hi ha variables d'entorn que no són sensibles, com el nom (intern) dels Pods, o millor dit, dels serveis que volem que connectin entre si (l'exemple de la BBDD és el més clar) o bé el nom de la BBDD que volem crear.
+- Al Secret hi van variables d'entorn sensibles (com users i passwords) encriptats com a mínim en base64. Poden anar-hi certificats.
+- Als deploy, des de la secció env, li passem les dades del secret i/o del configmap en funció del què estiguem instal·lant.
+Per exemple, en un deploy d'una bbdd caldrà crear usuari, password, password de root (tot això a secrets) i després un configmap amb el nom de la bbdd que volem crear.
+Per exemple, en un deploy d'un wordpress, caldrà també crear usuari, password, nom de la bbdd i també saber en quina màquina hi ha la bbdd. Aquesta última part es fa amb un configmap on diem el nom de SERVEI de la bbdd (maria-service per exemple).
+- En realitat el Deployment de mongo hauria de ser un StatefulSet. No ho és per simplificar-ho i perquè en l'exemple no hi ha persistència de dades però.ò

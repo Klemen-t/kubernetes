@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: mongodb-deployment
+ labels:
+   app: mongodb
+spec:
+ replicas: 1
+ selector:
+   matchLabels:
+     app: mongodb
+ template:
+   metadata:
+     labels:
+       app: mongodb
+   spec:
+     containers:
+     - name: mongodb
+       image: mongo
+       ports:
+       - containerPort: 27017
+       env:
+       - name: MONGO_INITDB_ROOT_USERNAME
+         valueFrom:
+          secretKeyRef:
+            name: mongo-secret #El nom que hem posat a les metadades del secret
+            key: mongo-root-username #El valor que li hem donat
+       - name: MONGO_INITDB_ROOT_PASSWORD
+         valueFrom:
+          secretKeyRef:
+            name: mongo-secret #El nom que hem posat a les metadades del secret
+            key: mongo-root-password #El valor que li hem donat
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: mongodb-service
+spec:
+ selector:
+   app: mongodb #IMPORTANT! Ha de quadrar amb el label del Deployment!
+ ports:
+   - protocol: TCP
+     port: 27017 #Port del servei de mongo (amb apache 80/443...)
+     targetPort: 27017 #Port exposat, ha de quadrar amb el containerPort de més amunt
+
+

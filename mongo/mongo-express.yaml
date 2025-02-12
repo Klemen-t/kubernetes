@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-express
+  labels:
+    app: mongo-express
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-express
+  template:
+    metadata:
+      labels:
+        app: mongo-express
+    spec:
+      containers:
+      - name: mongo-express
+        image: mongo-express
+        ports:
+        - containerPort: 8081
+        env: #IMPORTANT: no cal crear un mongo-express-secret, ja que podem reutilitzar
+        #el mateix arxiu secret per a la bbdd i per al express!!!
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret #el mateix arxiu secret per a la bbdd i per al express!!!
+              key: mongo-root-username #El valor que li hem donat
+        - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: mongo-secret #el mateix arxiu secret per a la bbdd i per al express!!!
+              key: mongo-root-password #El valor que li hem donat
+        - name: ME_CONFIG_MONGODB_SERVER
+          valueFrom: 
+            configMapKeyRef: #OJO! No és secretKeyRef en aquest cas!
+              name: mongo-configmap #El name que hem posat a les metadades del configmap
+              key: database_url #És la clau que farem servir al configmap
+        - name: ME_CONFIG_BASICAUTH_USERNAME
+          valueFrom: 
+            secretKeyRef:
+              name: mongo-secret #el mateix arxiu secret per a la bbdd i per al express!!!
+              key: mongo-root-username #El valor que li hem donat
+        - name: ME_CONFIG_BASICAUTH_PASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: mongo-secret #el mateix arxiu secret per a la bbdd i per al express!!!
+              key: mongo-root-password #El valor que li hem donat
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: mongo-express-service
+spec:
+ selector:
+   app: mongo-express #IMPORTANT! Ha de quadrar amb el label del Deployment!
+ type: LoadBalancer #= servei extern, OJO! A l’alçada de “selector”!!!
+ ports:
+   - protocol: TCP
+     port: 8081 #Port del servei de mongo-express (amb apache 80/443...)
+     targetPort: 8081 #Port exposat, ha de quadrar amb el containerPort de més amunt
+     nodePort: 30000 #min 30000, és el port que exposem externament

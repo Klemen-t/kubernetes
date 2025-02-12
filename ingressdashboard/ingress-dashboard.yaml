@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1 #important, ha de ser així o no va
+kind: Ingress
+metadata:
+  name: dashboard-ingress
+  namespace: kubernetes-dashboard #Ha de coincidir amb el namespace que volem veure externament, clar! També ha de coincidir amb el service i amb el pod!
+spec:
+  tls:
+  - hosts: 
+      - dashboard.klemen.cat #url de la web en https
+    secretName: dashboard-secret #secret on posarem les claus tls
+  rules:
+  - host: dashboard.klemen.cat #url
+    http:
+      paths: #La versió nova (v1) requereix aquests camps. En l'exemple de la Nana, que és versió beta, el yaml és diferent (al vídeo ja es veu)
+      - path: /
+        pathType: Prefix
+        backend: 
+         service: 
+           name: kubernetes-dashboard #Ha de coincidir amb el servei, el podem veure en aquest cas amb kubectl get all -n kubernetes-dashboard
+           port: 
+             number: 80
