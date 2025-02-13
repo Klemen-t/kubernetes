@@ -1,4 +1,4 @@
-#Llegeix-me!
+# Llegeix-me!
 
 Aquests arxius es poden deseplegar amb un Cluster amb aquests requeriments:
 
