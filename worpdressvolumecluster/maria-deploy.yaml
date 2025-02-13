@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment #Hauria de ser StatefulSet al ser stateful... 
+metadata:
+ name: maria-deploy
+ namespace: wordpressvolume
+ labels:
+   app: maria
+spec:
+ replicas: 1
+ selector:
+   matchLabels:
+     app: maria
+ template:
+   metadata:
+     labels:
+       app: maria
+   spec:
+     containers:
+     - name: maria
+       image: mariadb #Imatge base
+       ports:
+       - containerPort: 3306 #El port del servei (3306 en el cas de mariadb)
+       volumeMounts:
+       - name: dadesmariadb
+         mountPath: /var/lib/mysql  # Directori on hi ha la BBDD 
+       env: #Obligatori només un password en el cas de mariadb, no cal ni user ni bbdd. A més les envvars es poden dir de diferents maneres, MYSQL_ROOT_PASSWORD també pot ser.
+       - name: MARIADB_USER
+         valueFrom:
+          secretKeyRef:
+            name: maria-secret #El nom que hem posat a les metadades del secret
+            key: maria-username #El valor que li hem donat
+       - name: MARIADB_PASSWORD
+         valueFrom:
+          secretKeyRef:
+            name: maria-secret #El nom que hem posat a les metadades del secret
+            key: maria-password #El valor que li hem donat
+       - name: MARIADB_ROOT_PASSWORD
+         valueFrom:
+          secretKeyRef: 
+            name: maria-secret #El nom que hem posat a les metadades del secret
+            key: maria-password #El valor que li hem donat
+       - name: MARIADB_DATABASE
+         valueFrom: 
+           configMapKeyRef: #OJO! No és secretKeyRef en aquest cas, ja que les dades les pilla d'un ConfigMap!
+             name: maria-configmap #El name que hem posat a les metadades del configmap
+             key: nombbdd #És la clau que farem servir al configmap
+     volumes:
+        - name: dadesmariadb
+          persistentVolumeClaim:
+            claimName: mariadb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: maria-service
+ namespace: wordpressvolume
+spec:
+ selector:
+   app: maria #IMPORTANT! Ha de quadrar amb el label del Deployment!
+ ports:
+   - protocol: TCP
+     port: 3306 #Port del servei de maria (amb apache seria 80/443...)
+     targetPort: 3306 #Port exposat, ha de quadrar amb el containerPort de més amunt
+
+
