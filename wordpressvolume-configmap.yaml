@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: maria-configmap #Coincidint amb el nom del Deployment (veure variables d'entorn)
-  namespace: wordpressvolume
-data:
-  host: maria-service
-  nombbdd: wordpress
